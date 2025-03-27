@@ -54,8 +54,10 @@ Sub CopyIndentation ' The macro code
         args2(0).Value = spaceString
         dispatcher.executeDispatch(document, ".uno:InsertText", "", 0, args2())
 
-        ' Move cursor to the next line
-        cursor.goDown(1, False)
+        ' Move cursor to the next line (ensure last line is processed correctly)
+        If i < lineCount - 1 Then
+            cursor.goDown(1, False)
+        End If
     Next i ' End loop
 
 End Sub
@@ -116,10 +118,9 @@ Function ReadAllLines(text As String) As Variant
         End If
     Next i
 
-    If currentLine <> "" Then
-        ReDim Preserve allLines(lineIndex)
-        allLines(lineIndex) = currentLine
-    End If
+    ' Ensure last line is included
+    ReDim Preserve allLines(lineIndex)
+    allLines(lineIndex) = currentLine
 
     ReadAllLines = allLines
 End Function
