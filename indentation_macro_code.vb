@@ -47,11 +47,14 @@ Sub CopyIndentation ' The macro code
         ' Extract leading spaces from the line
         spaceString = ExtractSpaces(textLine)
 
+        ' Move cursor to the beginning of the line
+        cursor.gotoStartOfLine(False)
+
         ' Insert the corresponding number of spaces
         args2(0).Value = spaceString
         dispatcher.executeDispatch(document, ".uno:InsertText", "", 0, args2())
 
-        ' Move cursor
+        ' Move cursor to the next line
         cursor.goDown(1, False)
     Next i ' End loop
 
