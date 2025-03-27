@@ -1,280 +1,148 @@
-' the actual macro code For copy&paste including indentation,
-' it needs the space characters Set in VSCode As indentation,
-' Not tabs (in Case of tabs Set ASCII code needs To be modified in the script)
-'  the macro can be assigned To a shorcut, For example  ex. ctrl+D
+' The actual macro code for copy & paste including indentation.
+' It needs space characters set in VSCode as indentation, not tabs.
+' If tabs are used, the ASCII code needs to be modified in the script.
+' The macro can be assigned to a shortcut, for example, Ctrl+D.
 
-Sub Kopiowanie2 ' the macro code
+Sub CopyIndentation ' The macro code
 
-rem Get access To the document:
-document   = ThisComponent.CurrentController.Frame
-dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+    ' Get access to the document:
+    Dim document As Object
+    Dim dispatcher As Object
+    document = ThisComponent.CurrentController.Frame
+    dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
 
+    Dim text As String
+    Dim linesArray() As String
+    Dim lineCount As Integer
+    Dim textLine As String
+    Dim spaceString As String
 
-Dim tekst As string
-'Dim tekst2 As string
-Dim tablicaLini(1000) As string
-Dim liczbaWierszy As integer
-Dim liniaTekstu As string
-'Dim liczbaSpacji As integer
-Dim lancuchSpacji As string
+    text = GetClipboardText()
 
-tekst = getClipboardText()
+    ' Paste text from clipboard
+    dispatcher.executeDispatch(document, ".uno:Paste", "", 0, Array())
 
-' proby z kursorem, tj wczytywanie pozycji, docelowo dodanie spacji
-' chyba nawet nie potrzebne
+    ' Count the number of lines in the pasted text
+    lineCount = CountLines(text)
 
-' => wklejenie tekstu ze schowka z CSS
+    ' Move cursor to the top of the pasted text
+    Dim cursor As Object
+    cursor = ThisComponent.getCurrentController.getViewCursor()
+    cursor.gotoStartOfLine(False)
+    cursor.goUp(lineCount, False)
 
-dispatcher.executeDispatch(document, ".uno:Paste", "", 0, Array())
+    ' Read all lines into an array
+    linesArray = ReadAllLines(text)
 
-' => wczytanie liczby lini wklejonego kodu
+    ' Declare object for text insertion
+    Dim args2(0) As New com.sun.star.beans.PropertyValue
+    args2(0).Name = "Text"
 
-liczbaWierszy = zliczWiersze(tekst)
+    ' Start loop
+    Dim i As Integer
+    For i = 0 To lineCount - 1
+        ' Get the i-th line of text
+        textLine = linesArray(i)
 
-' => przesuniecie kursora Do samej góry wklejonego tekstu
+        ' Extract leading spaces from the line
+        spaceString = ExtractSpaces(textLine)
 
-Dim cursor As Object
+        ' Insert the corresponding number of spaces
+        args2(0).Value = spaceString
+        dispatcher.executeDispatch(document, ".uno:InsertText", "", 0, args2())
 
-cursor = ThisComponent.getCurrentController.getViewCursor
-cursor.gotoStartOfLine(False)
+        ' Move cursor
+        cursor.goDown(1, False)
+    Next i ' End loop
 
-cursor.goUp(liczbaWierszy + 1, False)
+End Sub
 
-' => wczytanie Do tablicy wszystkich linii tekstu
+Function ExtractSpaces(text As String) As String
+    Dim extractedSpaces As String
+    extractedSpaces = ""
 
-tablicaLini = wczytajWszystkieWiersze(tekst)
+    Dim i As Integer
+    Dim str As String
 
-' => deklaracja obiektu Do wydruku tekstu
-
-Dim args2(0) As New com.sun.star.beans.PropertyValue
-args2(0).Name = "Text"
-
-' => start pętli
-
-Dim I As integer
-Dim Z As integer
-
-Z = liczbaWierszy + 1
-
-For I = 1 To Z Step 1
-
-    ' => pobranie i-tej linii tekstu
-
-    liniaTekstu = tablicaLini(I)
-
-    ' => wczytanie łańcucha wiodących spacji z liniTekstu
-
-    lancuchSpacji = zczytajSpacje(liniaTekstu)
-
-    ' => wydruk odpowiedniej liczby spacji
-
-    args2(0).Value = lancuchSpacji
-
-    dispatcher.executeDispatch(document, ".uno:InsertText", "", 0, args2())
-
-    ' ruch kursorem
-
-    cursor.goDown(1, False)
-Next I ' koniec pętli
-
-end Sub
-
-Function zczytajSpacje(tekst As String) As string
-
-    Dim zczytaneSpacje As string
-    zczytaneSpacje = ""
-
-    Dim Z As integer
-    Z = Len(tekst)
-
-    Dim I As integer
-    Dim str As string
-
-    For I = 1 To Z Step 1
-    str = Mid(tekst,I,1)
-
-    If Asc(str) = 32 Then
-    zczytaneSpacje = zczytaneSpacje + " "
-    Else
-    Exit For
-    End If
-
-
-    zczytajSpacje = zczytaneSpacje
-
-End Function
-
-Function zliczSpacje(tekst As String) As Integer
-
-    ' przeiterowanie
-    Dim liczbaSpacji As Integer
-    liczbaSpacji = 0
-
-    Dim Z As integer
-    Z = Len(tekst)
-
-    Dim I As integer
-    Dim str As string
-
-    For I = 1 To Z Step 1
-        str = Mid(tekst,I,1)
+    For i = 1 To Len(text)
+        str = Mid(text, i, 1)
 
         If Asc(str) = 32 Then
-            liczbaSpacji = liczbaSpacji + 1
+            extractedSpaces = extractedSpaces & " "
         Else
             Exit For
         End If
+    Next i
 
-    Next I
-
-    zliczSpacje = liczbaSpacji
+    ExtractSpaces = extractedSpaces
 End Function
 
-'---------------------------------------------------
-'	~zliczanie spacji
-'---------------------------------------------------
+Function CountLines(text As String) As Integer
+    Dim lineCount As Integer
+    lineCount = 1
 
-
-'===================================================
-' sprawna funkcja
-'===================================================
-Function wczytajWszystkieWiersze(tekst As String)
-
-    Dim wszystkieWiersze(1000) As String
-
-    Dim tekst2 As string
-    tekst2 = ""
-
-    Dim liczbaWierszy As integer
-    liczbaWierszy = 1
-
-    Dim str As string
-    Dim wiersz As string
-
-    tekst = getClipboardText()
-
-    Dim Z As integer
-    Z = Len(tekst)
-
-    Dim I As integer
-
-    For I = 1 To Z Step 1
-        str = Mid(tekst,I,1)
-
-        wszystkieWiersze(liczbaWierszy) = wszystkieWiersze(liczbaWierszy) + str
-
-        'If numerWiersza = liczbaWierszy Then
-        '	   wiersz = wiersz + str
-        'End If
-
-        If Asc(str) = 10 Then ' i To dziala dobrze, tj. zwraca OSTATNI wiersz
-            'wiersz = ""
-            liczbaWierszy = liczbaWierszy + 1
+    Dim i As Integer
+    For i = 1 To Len(text)
+        If Asc(Mid(text, i, 1)) = 10 Then
+            lineCount = lineCount + 1
         End If
+    Next i
 
-    Next I
+    CountLines = lineCount
+End Function
 
-    wczytajWszystkieWiersze = wszystkieWiersze()
+Function ReadAllLines(text As String) As Variant
+    Dim allLines() As String
+    Dim lineIndex As Integer
+    Dim i As Integer
+    Dim str As String
+    Dim currentLine As String
 
-End Function ' ~ wczytajWiersz
-'===================================================
-'===================================================
+    lineIndex = 0
+    currentLine = ""
 
-' sprawna FUNKCJA ===================
-Function wczytajWiersz(tekst As String, numerWiersza As Integer) As String
-
-    Dim tekst2 As string
-    tekst2 = ""
-
-    Dim liczbaWierszy As integer
-    liczbaWierszy = 1
-
-    Dim str As string
-    Dim wiersz As string
-
-    tekst = getClipboardText()
-
-    Dim Z As integer
-    Z = Len(tekst)
-
-    Dim I As integer
-
-    For I = 1 To Z Step 1
-        str = Mid(tekst,I,1)
-
-        If numerWiersza = liczbaWierszy Then
-            wiersz = wiersz + str
-        End If
-
-        If Asc(str) = 10 Then ' i To dziala dobrze, tj. zwraca OSTATNI wiersz
-            'wiersz = ""
-            liczbaWierszy = liczbaWierszy + 1
-        End If
-
-    Next I
-
-    wczytajWiersz = wiersz
-
-End Function ' ~ wczytajWiersz
-
-
-' sprawna FUNKCJA ===================
-Function zliczWiersze(tekst As String) As Integer
-
-    Dim tekst2 As string
-    tekst2 = ""
-
-    Dim liczbaWierszy As integer
-    liczbaWierszy = 0
-
-    Dim str As string
-
-    tekst = getClipboardText()
-
-    Dim Z As integer
-    Z = Len(tekst)
-
-    Dim I As integer
-
-    For I = 1 To Z Step 1
-        str = Mid(tekst,I,1)
-
+    For i = 1 To Len(text)
+        str = Mid(text, i, 1)
         If Asc(str) = 10 Then
-            tekst2 = tekst2 + "L"
-            liczbaWierszy = liczbaWierszy + 1
+            ReDim Preserve allLines(lineIndex)
+            allLines(lineIndex) = currentLine
+            lineIndex = lineIndex + 1
+            currentLine = ""
+        Else
+            currentLine = currentLine & str
         End If
+    Next i
 
-    Next I
+    If currentLine <> "" Then
+        ReDim Preserve allLines(lineIndex)
+        allLines(lineIndex) = currentLine
+    End If
 
-    zliczWiersze = liczbaWierszy
+    ReadAllLines = allLines
+End Function
 
-End Function ' ~ zliczWiersze
-
-Function getClipboardText() As String rem +++ sprawna funkcja, zwraca CZYSTY tekst, z tabulacją
-    '''Returns a string of the current clipboard text'''
-
+Function GetClipboardText() As String ' Retrieves plain text from clipboard
     Dim oClip As Object ' com.sun.star.datatransfer.clipboard.SystemClipboard
     Dim oConverter As Object ' com.sun.star.script.Converter
     Dim oClipContents As Object
     Dim oTypes As Object
-    Dim i%
+    Dim i As Integer
+    Dim result As String
 
     oClip = createUnoService("com.sun.star.datatransfer.clipboard.SystemClipboard")
     oConverter = createUnoService("com.sun.star.script.Converter")
     On Error Resume Next
-    oClipContents = oClip.getContents
-    oTypes = oClipContents.getTransferDataFlavors
+    oClipContents = oClip.getContents()
+    oTypes = oClipContents.getTransferDataFlavors()
+
+    result = ""
 
     For i = LBound(oTypes) To UBound(oTypes)
         If oTypes(i).MimeType = "text/plain;charset=utf-16" Then
-         Exit For
+            result = oConverter.convertToSimpleType(oClipContents.getTransferData(oTypes(i)), com.sun.star.uno.TypeClass.STRING)
+            Exit For
         End If
-        Next
+    Next i
 
-        If (i >= 0) Then
-            On Error Resume Next
-            getClipboardText = oConverter.convertToSimpleType _
-            (oClipContents.getTransferData(oTypes(i)), com.sun.star.uno.TypeClass.STRING)
-        End If
-
-End Function ' getClipboardText
+    GetClipboardText = result
+End Function
