@@ -24,42 +24,73 @@ Sub CopyIndentation
     ' Count the number of lines in the pasted text
     lineCount = CountLines(text)
 
+    ' Read all lines into an array
+    linesArray = ReadAllLines(text)
+
     ' Move cursor to the top of the pasted text
     Dim cursor As Object
     cursor = ThisComponent.getCurrentController.getViewCursor()
-    cursor.gotoStartOfLine(False)
-    cursor.goUp(lineCount, False)
-
-    ' Read all lines into an array
-    linesArray = ReadAllLines(text)
 
     ' Declare object for text insertion
     Dim args2(0) As New com.sun.star.beans.PropertyValue
     args2(0).Name = "Text"
 
-    ' Iterate through each line and insert spaces at the beginning
+    Dim selectedText As String
+
+    ' Go to the start of the pasted text while inserting spaces in the beginning of each line
     Dim i As Integer
-    For i = 0 To lineCount - 1
-        ' Get the i-th line of text
-        textLine = linesArray(i)
+    For i = lineCount - 1 To 0 Step -1
+        ' Move cursor to the previous paragraph
+        cursor.goUp(1, False)
+        cursor.gotoEndOfLine(False)
 
-        ' Extract leading spaces from the line
-        spaceString = ExtractSpaces(textLine)
+        ' Select the whole line
+        cursor.gotoStartOfLine(true)
+        selectedText = cursor.getString()
 
-        ' Move cursor to the beginning of the line
-        cursor.gotoStartOfLine(False)
+        ' Move cursor to the start of the paragraph.
+        ' If the line is empty, skip it.
+        If selectedText <> "" Then
+            ' If not - move cursor to the end of the line, so ".uno:GoToStartOfPara" won't jump to the previous paragraph (because it will jump if cursor is at the beginning of the line)
+            cursor.gotoEndOfLine(False)
 
-        ' Insert the corresponding number of spaces
-        args2(0).Value = spaceString
-        dispatcher.executeDispatch(document, ".uno:InsertText", "", 0, args2())
+            ' Move cursor to the start of the paragraph
+            dispatcher.executeDispatch(document, ".uno:GoToStartOfPara", "", 0, Array())
 
-        ' Move cursor to the next line (ensure last line is processed correctly)
-        If i < lineCount - 1 Then
-            cursor.goDown(1, False)
+                ' Get the i-th line of text
+            textLine = linesArray(i)
+
+            ' Extract leading spaces from the line
+            spaceString = ExtractSpaces(textLine)
+
+            ' Insert the corresponding number of spaces
+            args2(0).Value = spaceString
+            dispatcher.executeDispatch(document, ".uno:InsertText", "", 0, args2())
         End If
-    ' End loop
+    ' Continue loop
     Next i
 
+    ' Go to the end of the pasted text
+    For i = 0 To lineCount - 1
+        ' Move cursor to the next paragraph
+        cursor.goDown(1, False)
+        cursor.gotoEndOfLine(False)
+
+        ' Select the whole line
+        cursor.gotoStartOfLine(true)
+        selectedText = cursor.getString()
+
+        ' Move cursor to the end of the paragraph.
+        ' If the line is empty, skip it.
+        If selectedText <> "" Then
+            ' If not - move cursor to the start of the line, so ".uno:GoToEndOfPara" won't jump to the next paragraph (because it will jump if cursor is at the beginning of the line)
+            cursor.gotoStartOfLine(False)
+
+            ' Move cursor to the end of the paragraph
+            dispatcher.executeDispatch(document, ".uno:GoToEndOfPara", "", 0, Array())
+        End If
+    ' Continue loop
+    Next i
 End Sub
 
 Function ExtractSpaces(text As String) As String
