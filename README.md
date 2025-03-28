@@ -1,5 +1,7 @@
 # libreoffice-paste-from-vscode
 
+**EN** | [RU](README_RU.md)
+
 ## 1. Description
 
 This is the macros for LibreOffice to paste copied code from VS Code with preserve syntax highlighting and indents.
@@ -13,7 +15,7 @@ When pasting into Microsoft Word - it will keep the colors and indents of the co
 
 ![Microsoft Word](./.readme_images/msword.png)
 
-But in LibreOffice Writer situation is different - we have two choices:
+But when pasting into LibreOffice Writer, the situation is different - we have two choices:
 
 ![LibreOffice - Paste Special](./.readme_images/libreoffice_paste_special.png)
 
@@ -25,11 +27,11 @@ But in LibreOffice Writer situation is different - we have two choices:
 
     ![LibreOffice - Paste Unformatted](./.readme_images/libreoffice_paste_unformatted.png)
 
-(On the LibreOffice examples above, background color `Dark Grey 4` was added to the paragraphs with code)
+(On the LibreOffice screenshots above, background color `Dark Grey 4` was added to the paragraphs with code)
 
 So why this is happening and how to make pasting work properly in LibreOffice too?
 
-## 3. Solution
+## 3. The solution
 
 At first I thought it was some LibreOffice setting. But found nothing except maybe autocorrect (`Tools` - `AutoCorrect` - `AutoCorrect Options...`):
 
@@ -41,25 +43,27 @@ Next I found unanswered question [here](https://ask.libreoffice.org/t/how-can-i-
 
 The solution is simple - because we have both styling and indents info in clipboard, we simply need to paste our code with style, and then insert indents for each line. The source code for the macros to do that is in file `indentation_macro_code.vb`.
 
-## 4. Apply solution
+## 4. Installation and usage
+
+You need:
 
 1. Copy contents of the file [`indentation_macro_code.vb`](https://raw.githubusercontent.com/Nikolai2038/libreoffice-paste-from-vscode/refs/heads/main/indentation_macro_code.vb);
 2. Open LibreOffice Writer;
 3. Select `Tools` - `Macros` - `Edit Macros...`;
-4. Open `My Macros & Dialog` - `Standard` - `Module1` and paste `indentation_macro_code.vb` code. Result should look like this:
+4. Open `My Macros & Dialog` - `Standard` - `Module1` and paste code from `indentation_macro_code.vb`. Result should look like this:
 
     ![LibreOffice - Macros created](./.readme_images/libreoffice_macros_created.png)
 
-5. Now open `Tools` - `Customize...` - `Keyboard`. Select `Keyboard` tab. Choose `LibreOffice` radio-button in the right-top corner. Now in `Category` choose `Application Macros` - `My Macros` - `Standard` - `Module1`. Select `CopyIndentation` in `Function`. Now in the `Shortcut Keys` select, for example, `Alt+V` and press Assign:
+5. Now open `Tools` - `Customize...` - `Keyboard`. Select `Keyboard` tab. Choose `LibreOffice` radio-button in the right-top corner. Now in `Category` choose `Application Macros` - `My Macros` - `Standard` - `Module1`. Select `CopyIndentation` in `Function`. Now in the `Shortcut Keys` select, for example, `Alt+V` and press `Assign`:
 
     ![LibreOffice - Macros hotkey](./.readme_images/libreoffice_macros_hotkey.png)
 
 6. Press `OK`;
-7. Now you can copy code from VS Code and paste in via pressing `Alt + V`. Result:
+7. Now you can copy some code from VS Code and paste in using `Alt + V` hotkey. Result:
 
     ![LibreOffice - Pasted via macros](./.readme_images/libreoffice_paste_via_macros.png)
 
-    (I had to insert 2 spaces in the first line and apply `Dark Grey 4` color to the background)
+    (I had to insert 2 spaces in the first line and apply `Dark Grey 4` color to the background of the paragraphs)
 
 ## 5. Contribution
 
